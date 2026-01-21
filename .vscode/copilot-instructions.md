@@ -5,14 +5,25 @@ When writing R code for this module, please follow these guidelines for high-per
 ## Using `duckdbfs` for Data Access
 Always prefer `duckdbfs::open_dataset()` over `read.csv()` or `read_parquet()` for opening local or remote tabular datasets. This creates a lazy connection that doesn't load everything into memory.
 
+### S3 Configuration (Public Access)
+To access public S3 buckets (like those on Source Cooperative), configure `duckdb_secrets` with empty credentials to avoid conflicts with local environment variables:
+
 ```r
 library(duckdbfs)
 library(dplyr)
 
-# Examples of opening datasets (can be URLs or local paths)
-url <- "https://github.com/duckdb/duckdb/raw/main/data/parquet-testing/hive-partitioning/union_by_name/x=1/f1.parquet"
-ds <- open_dataset(url)
+duckdb_secrets(
+    key = "",
+    secret = "",
+    endpoint = "s3.amazonaws.com",
+    region = "us-west-2"
+)
+
+# Use the recursive ** pattern for partitioned datasets
+s3_url <- "s3://us-west-2.opendata.source.coop/youssef-harby/exiobase-3/4588235/parquet/**"
+ds <- open_dataset(s3_url)
 ```
+
 
 ## Data Manipulation with `dplyr`
 Use standard `dplyr` verbs (`filter`, `select`, `mutate`, `group_by`, `summarise`) to process data. These operations are translated into optimized SQL by `dbplyr` and executed within DuckDB.
