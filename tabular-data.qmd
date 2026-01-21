@@ -9,23 +9,53 @@ format: html
 
 In this module, we will explore high-performance workflows for tabular data. We will use `duckdbfs` to work with datasets that are larger than available RAM by leveraging DuckDB's streaming and remote file access capabilities.
 
+## Case Study: Global Supply Chains
+
+We will be working with [EXIOBASE 3.8.1](https://source.coop/youssef-harby/exiobase-3), a global Multi-Regional Input-Output (MRIO) database. This dataset tracks economic transactions between sectors and regions, along with their environmental impacts (emissions, resource use, etc.).
+
+**Data description:**
+- **Coverage**: 44 countries + 5 rest-of-world regions.
+- **Timeframe**: 1995–2022.
+- **Content**: Economic transactions (Z matrix), final demand (Y matrix), and environmental stressors (F matrix).
+- **Format**: Cloud-optimized Parquet, partitioned by year and matrix type.
+
 ## Setup
 
-```r
+```{r}
 library(duckdbfs)
 library(dplyr)
+
+# Ensure no conflicting environment variables for public S3 access
+Sys.unsetenv("AWS_ACCESS_KEY_ID")
+Sys.unsetenv("AWS_SECRET_ACCESS_KEY")
+Sys.unsetenv("AWS_S3_ENDPOINT")
 ```
 
-## Exploration
+## Exercise 1: connecting to remote data
 
-Using `open_dataset()` to connect to data sources:
+We can open the entire dataset without downloading it using `open_dataset()`. The data is hosted on Source Cooperative. The `**` pattern allows recursive scanning of the partitioned parquet files.
 
-```r
-# ds <- open_dataset("path/to/data")
+```{r}
+# Remote S3 path to EXIOBASE 3 (Source Cooperative)
+s3_url <- "s3://us-west-2.opendata.source.coop/youssef-harby/exiobase-3/**"
+
+# Open the dataset lazily
+exio <- open_dataset(s3_url)
+
+# View the schema (column names and types) without reading data
+glimpse(exio)
 ```
 
-Perform filtering and aggregation using `dplyr` syntax...
+## Exercise 2: Efficient Filtering
 
-```r
-# ds |> filter(...) |> summarise(...) |> collect()
+The dataset is large. We should filter *before* collecting any data into R.
+
+```{r}
+# Example: Filter for specific years or regions
+us_exports_2022 <- exio |>
+    filter(year == 2022, origin_region == "US") |>
+    # . . . perform aggregation or selection . . .
+    compute() # or collect() if result is small
 ```
+
+> **Task**: Construct a query to find the top 5 sectors in the US by CO2 emissions in 2022. Remember to check the column names in `exio` to find the appropriate emissions flow.
