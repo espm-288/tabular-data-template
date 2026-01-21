@@ -25,8 +25,17 @@ ds <- open_dataset(s3_url)
 ```
 
 
-## Data Manipulation with `dplyr`
-Use standard `dplyr` verbs (`filter`, `select`, `mutate`, `group_by`, `summarise`) to process data. These operations are translated into optimized SQL by `dbplyr` and executed within DuckDB.
+## Data Manipulation with `dplyr` & Tidyverse
+Follow modern tidyverse conventions:
+- Use the native pipe `|>` instead of `%>%`.
+- Use descriptive variable names (snake_case).
+- Leverage standard `dplyr` verbs (`filter`, `select`, `mutate`, `group_by`, `summarise`). These operations are translated into optimized SQL by `dbplyr` and executed within DuckDB.
+
+## Plotting & Visualization
+When visualizing data:
+- Always `collect()` the data into R memory before passing it to `ggplot2`.
+- Use `ggplot2` for all plots.
+- Ensure the data being collected is appropriately filtered or summarized to fit in memory.
 
 ## Mindful Memory Management
 Avoid `collect()` unless specifically necessary to bring the final, aggregated result into R memory for plotting or specialized R-only functions.
@@ -44,6 +53,20 @@ result <- ds |>
   group_by(j) |>
   summarise(mean_x = mean(x, na.rm = TRUE)) |>
   collect()
+```
+
+### 2. Plotting with ggplot2
+```r
+library(ggplot2)
+
+ds |>
+  filter(year == 2022) |>
+  group_by(region) |>
+  summarize(total_value = sum(x, na.rm = TRUE)) |>
+  collect() |> # Essential for ggplot2
+  ggplot(aes(x = region, y = total_value)) +
+  geom_col() +
+  theme_minimal()
 ```
 
 ### 2. Handling Larger-than-RAM Data
