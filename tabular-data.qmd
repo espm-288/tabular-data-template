@@ -25,10 +25,6 @@ We will be working with [EXIOBASE 3.8.1](https://source.coop/youssef-harby/exiob
 library(duckdbfs)
 library(dplyr)
 
-# Ensure no conflicting environment variables for public S3 access
-Sys.unsetenv("AWS_ACCESS_KEY_ID")
-Sys.unsetenv("AWS_SECRET_ACCESS_KEY")
-Sys.unsetenv("AWS_S3_ENDPOINT")
 ```
 
 ## Exercise 1: connecting to remote data
@@ -37,7 +33,14 @@ We can open the entire dataset without downloading it using `open_dataset()`. Th
 
 ```{r}
 # Remote S3 path to EXIOBASE 3 (Source Cooperative)
-s3_url <- "s3://us-west-2.opendata.source.coop/youssef-harby/exiobase-3/**"
+
+duckdbfs::duckdb_secrets(
+    key = "",
+    secret = "",
+    endpoint = "s3.amazonaws.com",
+    region = "us-west-2"
+)
+s3_url <- "s3://us-west-2.opendata.source.coop/youssef-harby/exiobase-3/4588235/parquet/**"
 
 # Open the dataset lazily
 exio <- open_dataset(s3_url)
@@ -51,11 +54,10 @@ glimpse(exio)
 The dataset is large. We should filter *before* collecting any data into R.
 
 ```{r}
-# Example: Filter for specific years or regions
-us_exports_2022 <- exio |>
-    filter(year == 2022, origin_region == "US") |>
-    # . . . perform aggregation or selection . . .
-    compute() # or collect() if result is small
+exio |>
+    filter(year == 2022, region == "US") |>
+    head() |> # view the first 6 rows
+    collect()
 ```
 
 > **Task**: Construct a query to find the top 5 sectors in the US by CO2 emissions in 2022. Remember to check the column names in `exio` to find the appropriate emissions flow.
