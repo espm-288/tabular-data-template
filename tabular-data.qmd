@@ -1,0 +1,31 @@
+---
+title: "Module 1: Tabular Data"
+subtitle: "Working with larger-than-RAM data using duckdbfs"
+author: "ESPM 288"
+format: html
+---
+
+## Introduction
+
+In this module, we will explore high-performance workflows for tabular data. We will use `duckdbfs` to work with datasets that are larger than available RAM by leveraging DuckDB's streaming and remote file access capabilities.
+
+## Setup
+
+```r
+library(duckdbfs)
+library(dplyr)
+```
+
+## Exploration
+
+Using `open_dataset()` to connect to data sources:
+
+```r
+# ds <- open_dataset("path/to/data")
+```
+
+Perform filtering and aggregation using `dplyr` syntax...
+
+```r
+# ds |> filter(...) |> summarise(...) |> collect()
+```
